@@ -3,12 +3,23 @@ import fs from "fs-extra";
 import path from "node:path";
 import Handlebars from "handlebars";
 
+const HTTP_METHODS = new Set([
+  "get",
+  "post",
+  "put",
+  "patch",
+  "delete",
+  "options",
+  "head",
+  "trace"
+]);
+
 type Field = {
   name: string;
   label: string;
 };
 
-type Endpoint = {
+export type Endpoint = {
   name: string;
   path: string;
   method: string;
@@ -27,13 +38,17 @@ export async function generateApp(openapiFile: string, outputDir: string) {
   await generateStyles(outputDir);
 }
 
-function extractEndpoints(api: any): Endpoint[] {
+export function extractEndpoints(api: any): Endpoint[] {
   const endpoints: Endpoint[] = [];
 
   for (const routePath of Object.keys(api.paths ?? {})) {
     const methods = api.paths[routePath];
 
     for (const method of Object.keys(methods)) {
+      if (!HTTP_METHODS.has(method)) {
+        continue;
+      }
+
       const resourceName = getResourceName(routePath);
       const operation = methods[method];
 
@@ -49,9 +64,8 @@ function extractEndpoints(api: any): Endpoint[] {
   return endpoints;
 }
 
-function extractFieldsFromOperation(operation: any): Field[] {
-  const schema =
-    operation?.responses?.["200"]?.content?.["application/json"]?.schema;
+export function extractFieldsFromOperation(operation: any): Field[] {
+  const schema = getResponseSchema(operation);
 
   const itemSchema = schema?.type === "array" ? schema.items : schema;
   const properties = itemSchema?.properties ?? {};
@@ -71,7 +85,22 @@ function extractFieldsFromOperation(operation: any): Field[] {
   return fields;
 }
 
-function getResourceName(routePath: string): string {
+function getResponseSchema(operation: any) {
+  const responses = operation?.responses ?? {};
+
+  for (const statusCode of ["200", "201", "default"]) {
+    const responseSchema =
+      responses[statusCode]?.content?.["application/json"]?.schema;
+
+    if (responseSchema) {
+      return responseSchema;
+    }
+  }
+
+  return undefined;
+}
+
+export function getResourceName(routePath: string): string {
   const parts = routePath.split("/").filter(Boolean);
   return parts[0] ?? "resource";
 }
@@ -81,18 +110,20 @@ async function createReactProject(outputDir: string) {
     path.join(outputDir, "package.json"),
     JSON.stringify(
       {
+        name: path.basename(outputDir),
+        private: true,
         scripts: {
           dev: "vite",
           build: "vite build",
           preview: "vite preview"
         },
         dependencies: {
-          "@vitejs/plugin-react": "latest",
-          vite: "latest",
           react: "latest",
           "react-dom": "latest"
         },
         devDependencies: {
+          "@vitejs/plugin-react": "latest",
+          vite: "latest",
           typescript: "latest",
           "@types/react": "latest",
           "@types/react-dom": "latest"
@@ -106,6 +137,46 @@ async function createReactProject(outputDir: string) {
   await fs.writeFile(
     path.join(outputDir, "index.html"),
     `<div id="root"></div><script type="module" src="/src/main.tsx"></script>`
+  );
+
+  await fs.writeFile(
+    path.join(outputDir, "tsconfig.json"),
+    JSON.stringify(
+      {
+        compilerOptions: {
+          target: "ES2020",
+          useDefineForClassFields: true,
+          lib: ["ES2020", "DOM", "DOM.Iterable"],
+          allowJs: false,
+          skipLibCheck: true,
+          esModuleInterop: true,
+          allowSyntheticDefaultImports: true,
+          strict: true,
+          forceConsistentCasingInFileNames: true,
+          module: "ESNext",
+          moduleResolution: "Bundler",
+          resolveJsonModule: true,
+          isolatedModules: true,
+          noEmit: true,
+          jsx: "react-jsx"
+        },
+        include: ["src"],
+        references: []
+      },
+      null,
+      2
+    )
+  );
+
+  await fs.writeFile(
+    path.join(outputDir, "vite.config.ts"),
+    `import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+
+export default defineConfig({
+  plugins: [react()]
+});
+`
   );
 
   await fs.ensureDir(path.join(outputDir, "src"));
