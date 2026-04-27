@@ -1,0 +1,303 @@
+import Handlebars from "handlebars";
+
+import type { Endpoint } from "../openapi/types.js";
+
+const listPageTemplate = Handlebars.compile(`
+const exampleItem = {
+{{#each fields}}
+  {{name}}: "{{name}} example",
+{{/each}}
+};
+
+export default function {{componentName}}() {
+  const items = [exampleItem];
+
+  return (
+    <main className="page">
+      <section className="card">
+        <div className="header">
+          <div>
+            <p className="eyebrow">Generated page</p>
+            <h1>{{title}}</h1>
+          </div>
+
+          <button className="primaryButton">Create new</button>
+        </div>
+
+        <p className="endpoint">
+          Generated from endpoint: <code>{{method}} {{path}}</code>
+        </p>
+
+        <div className="tableWrapper">
+          <table>
+            <thead>
+              <tr>
+                {{#each fields}}
+                <th>{{label}}</th>
+                {{/each}}
+                <th>Actions</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {items.map((item, index) => (
+                <tr key={index}>
+                  {{#each fields}}
+                  <td>{item["{{name}}"]}</td>
+                  {{/each}}
+                  <td className="actions">
+                    <button>View</button>
+                    <button>Edit</button>
+                    <button>Delete</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  );
+}
+`);
+
+export function renderPackageJson(outputDirName: string) {
+  return JSON.stringify(
+    {
+      name: outputDirName,
+      private: true,
+      scripts: {
+        dev: "vite",
+        build: "vite build",
+        preview: "vite preview"
+      },
+      dependencies: {
+        react: "latest",
+        "react-dom": "latest"
+      },
+      devDependencies: {
+        "@vitejs/plugin-react": "latest",
+        vite: "latest",
+        typescript: "latest",
+        "@types/react": "latest",
+        "@types/react-dom": "latest"
+      }
+    },
+    null,
+    2
+  );
+}
+
+export function renderIndexHtml() {
+  return `<div id="root"></div><script type="module" src="/src/main.tsx"></script>`;
+}
+
+export function renderTsConfig() {
+  return JSON.stringify(
+    {
+      compilerOptions: {
+        target: "ES2020",
+        useDefineForClassFields: true,
+        lib: ["ES2020", "DOM", "DOM.Iterable"],
+        allowJs: false,
+        skipLibCheck: true,
+        esModuleInterop: true,
+        allowSyntheticDefaultImports: true,
+        strict: true,
+        forceConsistentCasingInFileNames: true,
+        module: "ESNext",
+        moduleResolution: "Bundler",
+        resolveJsonModule: true,
+        isolatedModules: true,
+        noEmit: true,
+        jsx: "react-jsx"
+      },
+      include: ["src"],
+      references: []
+    },
+    null,
+    2
+  );
+}
+
+export function renderViteConfig() {
+  return `import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+
+export default defineConfig({
+  plugins: [react()]
+});
+`;
+}
+
+export function renderListPage(
+  endpoint: Endpoint,
+  componentName: string,
+  title: string
+) {
+  return listPageTemplate({
+    componentName,
+    title,
+    method: endpoint.method,
+    path: endpoint.path,
+    fields: endpoint.fields
+  });
+}
+
+export function renderEmptyApp() {
+  return `import "./style.css";
+
+export default function App() {
+  return (
+    <main className="page">
+      <section className="card">
+        <h1>No GET endpoints found</h1>
+        <p>Your OpenAPI file does not contain any GET endpoint yet.</p>
+      </section>
+    </main>
+  );
+}
+`;
+}
+
+export function renderAppComponent(componentName: string) {
+  return `import "./style.css";
+import ${componentName} from "./${componentName}";
+
+export default function App() {
+  return <${componentName} />;
+}
+`;
+}
+
+export function renderMainFile() {
+  return `import React from "react";
+import ReactDOM from "react-dom/client";
+import App from "./App";
+
+ReactDOM.createRoot(document.getElementById("root")!).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+`;
+}
+
+export function renderStyles() {
+  return `
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #f4f7fb;
+  color: #111827;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.page {
+  min-height: 100vh;
+  padding: 40px;
+}
+
+.card {
+  max-width: 1000px;
+  margin: 0 auto;
+  background: white;
+  border-radius: 18px;
+  padding: 28px;
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.08);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.eyebrow {
+  margin: 0 0 6px;
+  color: #6366f1;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+h1 {
+  margin: 0;
+  font-size: 32px;
+}
+
+.endpoint {
+  color: #4b5563;
+  margin-bottom: 24px;
+}
+
+code {
+  background: #eef2ff;
+  color: #3730a3;
+  padding: 4px 8px;
+  border-radius: 8px;
+}
+
+.tableWrapper {
+  overflow-x: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  padding: 14px 16px;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+th {
+  background: #f9fafb;
+  font-size: 13px;
+  text-transform: uppercase;
+  color: #6b7280;
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+button {
+  border: 1px solid #d1d5db;
+  background: white;
+  border-radius: 10px;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #f3f4f6;
+}
+
+.primaryButton {
+  background: #4f46e5;
+  color: white;
+  border-color: #4f46e5;
+}
+
+.primaryButton:hover {
+  background: #4338ca;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+`;
+}
