@@ -1,9 +1,11 @@
+import { cliValidationTestCases } from "./testCases/cliValidationTests.js";
 import { openApiTestCases } from "./testCases/openApiTests.js";
 import { projectTestCases } from "./testCases/projectTests.js";
 import { stringUtilsTestCases } from "./testCases/stringUtilsTests.js";
 
 const testCases = [
   ...openApiTestCases,
+  ...cliValidationTestCases,
   ...stringUtilsTestCases,
   ...projectTestCases
 ];

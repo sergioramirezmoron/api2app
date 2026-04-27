@@ -98,6 +98,12 @@ npm run dev -- ./examples/cars.openapi.json --output generated-app
 api2app <openapi-file> --output <directory>
 ```
 
+Current expectation:
+
+- the input file should be a valid OpenAPI JSON document
+- the document must define `paths`
+- the document must contain at least one supported HTTP endpoint
+
 Example:
 
 ```bash
