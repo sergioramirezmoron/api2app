@@ -1,0 +1,36 @@
+{
+  "name": "api2app",
+  "version": "0.1.0",
+  "description": "Generate a React frontend from an OpenAPI file.",
+  "type": "module",
+  "bin": {
+    "api2app": "./dist/index.js"
+  },
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "openapi",
+    "swagger",
+    "react",
+    "typescript",
+    "frontend-generator",
+    "crud"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@apidevtools/swagger-parser": "^10.0.0",
+    "commander": "^12.0.0",
+    "fs-extra": "^11.0.0",
+    "handlebars": "^4.7.8"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.0",
+    "@types/node": "^20.0.0",
+    "tsx": "^4.0.0",
+    "typescript": "^5.0.0"
+  }
+}
