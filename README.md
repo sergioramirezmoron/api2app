@@ -124,6 +124,7 @@ Project scripts:
 
 - `npm run build`: compile the CLI
 - `npm run lint`: run ESLint against the repository source
+- `npm run smoke`: generate a sample app, install its dependencies, and build it
 - `npm run test`: compile and run regression tests
 - `npm run check`: alias for the current validation flow
 - `npm run dev -- <openapi-file> -o <dir>`: run the generator from source
@@ -144,6 +145,7 @@ npm run test
 ```
 
 Continuous integration runs `build`, `lint`, and `test` automatically on pushes and pull requests targeting `main`.
+It also runs a generated app smoke test to verify that the scaffold can install dependencies and build successfully.
 
 ## Project Status
 
