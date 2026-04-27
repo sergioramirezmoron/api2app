@@ -1,4 +1,3 @@
-import SwaggerParser from "@apidevtools/swagger-parser";
 import fs from "fs-extra";
 
 import {
@@ -6,7 +5,8 @@ import {
   extractFieldsFromOperation,
   getResourceName
 } from "./openapi/extractors.js";
-import type { Endpoint, OpenApiLike } from "./openapi/types.js";
+import { loadOpenApiDocument } from "./openapi/loadDocument.js";
+import type { Endpoint } from "./openapi/types.js";
 import {
   createReactProject,
   generateAppFile,
@@ -15,8 +15,7 @@ import {
 } from "./project/scaffold.js";
 
 export async function generateApp(openapiFile: string, outputDir: string) {
-  const api = await SwaggerParser.dereference(openapiFile);
-  const endpoints = extractEndpoints(api as OpenApiLike);
+  const { endpoints } = await loadOpenApiDocument(openapiFile);
 
   await fs.emptyDir(outputDir);
 
