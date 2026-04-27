@@ -2,10 +2,13 @@ import fs from "fs-extra";
 import path from "node:path";
 
 import type { Endpoint } from "../openapi/types.js";
-import { toPascalCase } from "../utils/stringUtils.js";
+import { toPackageName, toPascalCase } from "../utils/stringUtils.js";
 import {
   renderAppComponent,
+  renderEnvExample,
   renderEmptyApp,
+  renderGeneratedGitignore,
+  renderGeneratedReadme,
   renderIndexHtml,
   renderListPage,
   renderMainFile,
@@ -16,9 +19,11 @@ import {
 } from "./templates.js";
 
 export async function createReactProject(outputDir: string) {
+  const outputDirName = path.basename(outputDir);
+
   await fs.writeFile(
     path.join(outputDir, "package.json"),
-    renderPackageJson(path.basename(outputDir))
+    renderPackageJson(toPackageName(outputDirName))
   );
 
   await fs.writeFile(path.join(outputDir, "index.html"), renderIndexHtml());
@@ -27,8 +32,23 @@ export async function createReactProject(outputDir: string) {
     path.join(outputDir, "vite.config.ts"),
     renderViteConfig()
   );
+  await fs.writeFile(
+    path.join(outputDir, ".gitignore"),
+    renderGeneratedGitignore()
+  );
+  await fs.writeFile(
+    path.join(outputDir, "README.md"),
+    renderGeneratedReadme(outputDirName)
+  );
+  await fs.writeFile(
+    path.join(outputDir, ".env.example"),
+    renderEnvExample()
+  );
 
-  await fs.ensureDir(path.join(outputDir, "src"));
+  await fs.ensureDir(path.join(outputDir, "src", "api"));
+  await fs.ensureDir(path.join(outputDir, "src", "components"));
+  await fs.ensureDir(path.join(outputDir, "src", "pages"));
+  await fs.ensureDir(path.join(outputDir, "src", "types"));
 }
 
 export async function generatePages(outputDir: string, endpoints: Endpoint[]) {
@@ -40,7 +60,7 @@ export async function generatePages(outputDir: string, endpoints: Endpoint[]) {
     const content = renderListPage(endpoint, componentName, title);
 
     await fs.writeFile(
-      path.join(outputDir, "src", `${componentName}.tsx`),
+      path.join(outputDir, "src", "pages", `${componentName}.tsx`),
       content
     );
   }
