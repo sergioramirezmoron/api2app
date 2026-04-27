@@ -26,9 +26,33 @@ export type Endpoint = {
   fields: Field[];
 };
 
+type SchemaLike = {
+  type?: string;
+  items?: SchemaLike;
+  properties?: Record<string, unknown>;
+};
+
+type JsonContentLike = {
+  schema?: SchemaLike;
+};
+
+type ResponseLike = {
+  content?: {
+    "application/json"?: JsonContentLike;
+  };
+};
+
+type OperationLike = {
+  responses?: Record<string, ResponseLike>;
+};
+
+type OpenApiLike = {
+  paths?: Record<string, Record<string, unknown>>;
+};
+
 export async function generateApp(openapiFile: string, outputDir: string) {
   const api = await SwaggerParser.dereference(openapiFile);
-  const endpoints = extractEndpoints(api as any);
+  const endpoints = extractEndpoints(api as OpenApiLike);
 
   await fs.emptyDir(outputDir);
 
@@ -38,11 +62,12 @@ export async function generateApp(openapiFile: string, outputDir: string) {
   await generateStyles(outputDir);
 }
 
-export function extractEndpoints(api: any): Endpoint[] {
+export function extractEndpoints(api: OpenApiLike): Endpoint[] {
   const endpoints: Endpoint[] = [];
+  const paths = api.paths ?? {};
 
-  for (const routePath of Object.keys(api.paths ?? {})) {
-    const methods = api.paths[routePath];
+  for (const routePath of Object.keys(paths)) {
+    const methods = paths[routePath];
 
     for (const method of Object.keys(methods)) {
       if (!HTTP_METHODS.has(method)) {
@@ -50,7 +75,7 @@ export function extractEndpoints(api: any): Endpoint[] {
       }
 
       const resourceName = getResourceName(routePath);
-      const operation = methods[method];
+      const operation = methods[method] as OperationLike;
 
       endpoints.push({
         name: resourceName,
@@ -64,7 +89,7 @@ export function extractEndpoints(api: any): Endpoint[] {
   return endpoints;
 }
 
-export function extractFieldsFromOperation(operation: any): Field[] {
+export function extractFieldsFromOperation(operation: OperationLike): Field[] {
   const schema = getResponseSchema(operation);
 
   const itemSchema = schema?.type === "array" ? schema.items : schema;
@@ -85,7 +110,7 @@ export function extractFieldsFromOperation(operation: any): Field[] {
   return fields;
 }
 
-function getResponseSchema(operation: any) {
+function getResponseSchema(operation: OperationLike) {
   const responses = operation?.responses ?? {};
 
   for (const statusCode of ["200", "201", "default"]) {
