@@ -1,5 +1,7 @@
 # API2APP
 
+[![CI](https://github.com/sergioramirezmoron/api2app/actions/workflows/ci.yml/badge.svg)](https://github.com/sergioramirezmoron/api2app/actions/workflows/ci.yml)
+
 Generate a React + Vite scaffold from an OpenAPI file.
 
 API2APP is currently an MVP CLI. Its purpose today is to read an OpenAPI document and generate a basic frontend starting point for documented resources.
@@ -134,6 +136,8 @@ Run tests with:
 ```bash
 npm run test
 ```
+
+Continuous integration runs `build`, `lint`, and `test` automatically on pushes and pull requests targeting `main`.
 
 ## Project Status
 
