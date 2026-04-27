@@ -115,6 +115,7 @@ npm run dev
 Project scripts:
 
 - `npm run build`: compile the CLI
+- `npm run lint`: run ESLint against the repository source
 - `npm run test`: compile and run regression tests
 - `npm run check`: alias for the current validation flow
 - `npm run dev -- <openapi-file> -o <dir>`: run the generator from source
