@@ -1,185 +1,207 @@
-# API2APP — Generate a React app from OpenAPI in seconds
+# API2APP
 
-Turn your API into a working frontend instantly. No boilerplate. No setup.
+Generate a React + Vite scaffold from an OpenAPI file.
 
----
+API2APP is currently an MVP CLI. Its purpose today is to read an OpenAPI document and generate a basic frontend starting point for documented resources.
 
-## What is API2APP?
+## Current Scope
 
-API2APP is a CLI tool that generates a fully working React frontend from an OpenAPI (Swagger) file.
+What the tool does today:
 
-Instead of manually building tables, forms, routing, and API calls, API2APP does it automatically.
+- Parses an OpenAPI file
+- Detects HTTP endpoints from `paths`
+- Infers table fields from response schemas
+- Generates a React + Vite project scaffold
+- Creates a basic list page for `GET` resources
 
----
+What the tool does not do yet:
 
-## Quick Start
+- Real API fetching
+- Routing between generated pages
+- Form generation for create or edit flows
+- Authentication
+- Production-ready CRUD behavior
+
+This distinction matters. API2APP should currently be understood as a scaffold generator, not a full application generator.
+
+## Example Output
+
+Given an OpenAPI file with a resource like:
+
+```json
+{
+  "paths": {
+    "/cars": {
+      "get": {
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": { "type": "number" },
+                      "brand": { "type": "string" },
+                      "model": { "type": "string" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+API2APP generates a project like:
+
+```text
+my-app/
+|-- index.html
+|-- package.json
+|-- tsconfig.json
+|-- vite.config.ts
+`-- src/
+    |-- App.tsx
+    |-- CarsList.tsx
+    |-- main.tsx
+    `-- style.css
+```
+
+## Installation
+
+### Run locally from this repository
 
 ```bash
-npx api2app ./openapi.json --output my-app
+npm install
+npm run build
+node dist/index.js ./examples/cars.openapi.json --output generated-app
+```
+
+### Run in development mode
+
+```bash
+npm install
+npm run dev -- ./examples/cars.openapi.json --output generated-app
+```
+
+## CLI Usage
+
+```bash
+api2app <openapi-file> --output <directory>
+```
+
+Example:
+
+```bash
+api2app ./openapi.json --output my-app
+```
+
+Then install and run the generated app:
+
+```bash
 cd my-app
 npm install
 npm run dev
 ```
 
----
+## Development
 
-## What it does
+Project scripts:
 
-Given an OpenAPI file like:
+- `npm run build`: compile the CLI
+- `npm run test`: compile and run regression tests
+- `npm run check`: alias for the current validation flow
+- `npm run dev -- <openapi-file> -o <dir>`: run the generator from source
 
-```json
-{
-  "/cars": {
-    "get": {},
-    "post": {}
-  }
-}
+## Testing
+
+The project includes a lightweight regression test runner that validates:
+
+- endpoint extraction
+- field inference
+- resource naming
+- real scaffold generation from the example OpenAPI file
+
+Run tests with:
+
+```bash
+npm run test
 ```
 
-API2APP generates:
+## Project Status
 
-- List pages (tables)
-- Columns based on schema
-- API-ready structure
-- Basic UI layout
-- Working React app
+This repository is in early MVP stage.
 
----
+The current priority is to make the generator:
 
-## Generated Structure
+- predictable
+- testable
+- honest in scope
+- easy to evolve
 
-```
-my-app/
-├── src/
-│   ├── App.tsx
-│   ├── CarsList.tsx
-│   ├── main.tsx
-│   ├── style.css
-├── index.html
-├── package.json
-```
+Before wider publication, the project still needs:
 
----
+- ESLint and formatting standards
+- CI checks in GitHub Actions
+- modularization of the generator internals
+- better CLI error handling
+- real data fetching support
 
-## Features
+## Branch and Commit Conventions
 
-- Instant frontend generation
-- Reads OpenAPI schemas
-- Auto table generation
-- Clean UI out of the box
-- Fully editable code
+Use short-lived branches named by intent:
 
----
-
-## Status
-
-Early MVP
-
-Planned features:
-
-- Real API fetch
-- Forms generation (create/edit)
-- Routing
-- Better UI components
-
----
-
-## Tech Stack
-
-- TypeScript
-- Node.js
-- React
-- Vite
-- Handlebars
-
----
-
-## Development & Contribution Guide
-
-### Branch Naming Convention
-
-```
-feature/add-forms
-feature/generate-routes
-fix/parser-error
-docs/update-readme
-```
-
----
-
-### Commit Convention
-
-Format:
-
-```
-type: short description
-```
-
-Types:
-
-- feat: new feature
-- fix: bug fix
-- docs: documentation
-- refactor: code improvement
-- chore: maintenance
-- style: formatting
+- `feat/...`
+- `fix/...`
+- `docs/...`
+- `refactor/...`
+- `chore/...`
 
 Examples:
 
-```
-feat: add dynamic table generation
-fix: resolve handlebars parsing issue
-docs: update README usage section
-refactor: improve endpoint parser
-```
+- `feat/add-fetch-client`
+- `fix/openapi-response-parsing`
+- `docs/rewrite-readme`
 
----
+Commit format:
 
-### Branch Protection Rules
-
-The main branch is protected:
-
-- No direct pushes allowed
-- No force pushes allowed
-- Pull Requests required
-- Clean history enforced
-
----
-
-### Workflow
-
-1. Create a branch
-
-```bash
-git checkout -b feature/your-feature
+```text
+type: short description
 ```
 
-2. Commit changes
+Examples:
 
-```bash
-git add .
-git commit -m "feat: your feature"
+```text
+feat: add generated routing scaffold
+fix: ignore non-http path metadata
+docs: rewrite readme for mvp scope
+refactor: split generator into modules
 ```
 
-3. Push branch
+## Recommended Workflow
 
-```bash
-git push origin feature/your-feature
-```
+1. Create a branch from `main`.
+2. Make focused changes.
+3. Run `npm run test`.
+4. Open a pull request.
+5. Merge to `main` only after review.
 
-4. Open a Pull Request
+## Roadmap
 
----
+Short-term priorities:
 
-## Contributing
-
-Pull requests are welcome.
-
-- Follow naming conventions
-- Keep commits clean
-- Keep code readable
-
----
+1. Rewrite and align documentation
+2. Split the generator into maintainable modules
+3. Add linting and CI
+4. Improve CLI validation and error messages
+5. Generate fetch-ready resource pages
+6. Add routing and form generation
 
 ## License
 
